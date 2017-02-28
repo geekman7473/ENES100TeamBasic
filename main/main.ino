@@ -1,6 +1,5 @@
 #include "enes100.h"
 #include "math.h"
-#include "dfr_tank.h"
 
 /*
  * Replace 8 and 9 with the pins you plan on using for RX and TX 
@@ -10,8 +9,6 @@
 SoftwareSerial mySerial(8,9); 
 Marker marker(3); // Will have to replace # with our team's marker #
 RF_Comm rf(&mySerial, &marker);
-
-DFRTank tank;
 
 //Tracks state of FSM
 int state = 1; 
@@ -28,8 +25,6 @@ void setup() {
   pinMode(dSense,OUTPUT);
   Serial.begin(9600);
 
-  tank.init();
-
   rf.updateLocation();
 
   //Finds vector from starting position to center of staging area
@@ -45,7 +40,7 @@ void loop() {
       case 1:
         float err = marker.theta - tTheta;
         if(abs(err) > 0.02){
-          drive(-1, 1); //Turn left until error is negligible
+          turn(1); //turn right until you're facing the right direction/
         } else {
           state++:
         }
@@ -71,9 +66,8 @@ void loop() {
     
 }
 
-void drive(float left, float right){
-  tank.setLeftMotorPWM(left * 255);
-  tank.setRightMotorPWM(right * 255);
+void turn(int direction){
+  //TODO: Make this actually turn the robot...
 }
 
 float findDistance() {
@@ -81,10 +75,15 @@ float findDistance() {
   float curY = marker.y;
   float desiredX = 0.5;
   float desiredY = 1.0;
+
+  float diffX = abs(marker.x - desiredX);
+  float diffY = abs(marker.y - desiredY);
+
+  float distance = sqrt((diffX)^2 + (diffY)^2); // Uses pythagorean thm to calculate the distance needed to travel
   
 }
 
 void driveDistance(float distance) {
-  
+  //TODO: Make this actually drive the robot...
 }
 
