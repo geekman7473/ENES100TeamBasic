@@ -45,11 +45,40 @@ void loop() {
           state++:
         }
         break;
+      // Drive towards the center point
+      case 2: 
+        // Check if the error of the angle is greater than 2 degrees
+        float err = marker.theta - tTheta;
+        if (abs(err) > 2) {
+          state = 1; // Go back and fix the angle
+        }
+        // Calculate & drive the distance
+        else {
+          float distance = findDistance();
+          driveDistance(distance);
+          rf.updateLocation();
+          if (marker.x = 0.5 && marker.y = 1.0) {
+            state++;
+          }
+        }
+        break;
     }
     
 }
 
 void turn(int direction){
   //TODO: Make this actually turn the robot...
+}
+
+float findDistance() {
+  float curX = marker.x;
+  float curY = marker.y;
+  float desiredX = 0.5;
+  float desiredY = 1.0;
+  
+}
+
+void driveDistance(float distance) {
+  
 }
 
