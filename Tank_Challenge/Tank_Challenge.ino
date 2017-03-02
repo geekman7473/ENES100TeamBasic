@@ -67,6 +67,11 @@ void loop() {
         tTheta = 0;
         turnToTarget();
         break;
+      //Turn up to look for board
+      case 4:
+        tTheta = PI/4;
+        turnToTarget();
+        break;
     }
     
 }
