@@ -54,7 +54,7 @@ void loop() {
       case 2: 
         // Check if the error of the angle is greater than 2 degrees
         float err = marker.theta - tTheta;
-        if (abs(err) > 2) {
+        if (abs(err) > 0.02) {
           state = 1; // Go back and fix the angle
         }
         // Calculate & drive the distance
@@ -67,6 +67,8 @@ void loop() {
           }
         }
         break;
+      case 3:
+      
     }
     
 }

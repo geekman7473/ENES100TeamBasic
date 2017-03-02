@@ -43,18 +43,13 @@ void loop() {
     switch (state) {
       //State 1 turns robot to correct angle
       case 1:
-        float err = marker.theta - tTheta;
-        if(abs(err) > 0.02){
-          drive(-1, 1); //Turn left until error is negligible
-        } else {
-          state++:
-        }
+        turnToTarget();
         break;
       // Drive towards the center point
       case 2: 
         // Check if the error of the angle is greater than 2 degrees
-        float err = marker.theta - tTheta;
-        if (abs(err) > 2) {
+        float err = marker.theta - atan2(tLocX - marker.x, tLocY - marker.y);
+        if (abs(err) > 0.005) {
           state = 1; // Go back and fix the angle
         }
         // Calculate & drive the distance
@@ -67,6 +62,11 @@ void loop() {
           }
         }
         break;
+      //Turn perpendicular to wall
+      case 3:
+        tTheta = 0;
+        turnToTarget();
+        break;
     }
     
 }
@@ -74,6 +74,15 @@ void loop() {
 void drive(float left, float right){
   tank.setLeftMotorPWM(left * 255);
   tank.setRightMotorPWM(right * 255);
+}
+
+void turnToTarget(){
+  float err = marker.theta - tTheta;
+  if(abs(err) > 0.005){
+    drive(-1, 1); //Turn left until error is negligible
+  } else {
+    state++:
+  }
 }
 
 float findDistance() {
@@ -86,10 +95,14 @@ float findDistance() {
   float diffY = abs(marker.y - desiredY);
 
   float distance = sqrt((diffX)^2 + (diffY)^2); // Uses pythagorean thm to calculate the distance needed to travel
-  
 }
 
-void driveDistance(float distance) {
-  //TODO: Make this actually drive the robot...
-}
+float findDistance(int x, int y) {
+  float curX = marker.x;
+  float curY = marker.y;
 
+  float diffX = abs(marker.x - x);
+  float diffY = abs(marker.y - y);
+
+  float distance = sqrt((diffX)^2 + (diffY)^2); // Uses pythagorean thm to calculate the distance needed to travel
+}
