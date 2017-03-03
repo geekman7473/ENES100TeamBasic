@@ -1,7 +1,6 @@
+#include <dfr_tank.h>
 #include "enes100.h"
 #include "math.h"
-#include "dfr_tank.h"
-#include <SharpIR.h>
 
 /**
  * HC-SR04 Ultrasonic Sensor
@@ -80,6 +79,8 @@ void loop() {
       //State 1 turns robot to correct angle
       case 1:
         mySerial.println("Case 1");
+        mySerial.print("tTheta:");
+        mySerial.println(tTheta);
         turnToTarget();
         break;
       // Drive towards the center point
@@ -88,13 +89,13 @@ void loop() {
           mySerial.println("Case 2");
           // Check if the error of the angle is greater than 2 degrees
           float err = marker.theta - atan2(tLocX - marker.x, tLocY - marker.y);
-          if (abs(err) > 0.005) {
+          if (abs(err) > 0.01) {
             state = 1; // Go back and fix the angle
           }
           // Calculate & drive the distance
           else {
             float distance = findDistance();
-            drive(1,1);
+            drive(.3,.3);
             if (distance < 0.03) {
               state++;
             }
@@ -121,7 +122,7 @@ void loop() {
       case 5:
         mySerial.println("Case 5");
         if (wallThere()) {
-          drive (0.5, 0.5);
+          drive (0.3, 0.3);
           state++;
         }
         break;
@@ -133,7 +134,7 @@ void loop() {
           tTheta = 0;
           turnToTarget();
         }
-        drive(1,1);
+        drive(.3,.3);
         delay(100);
         drive(0,0);
         break;
@@ -148,7 +149,7 @@ void drive(float left, float right){
 void turnToTarget(){
   float err = marker.theta - tTheta;
   if(abs(err) > 0.005){
-    drive(-1, 1); //Turn left until error is negligible
+    drive(-.3, .3); //Turn left until error is negligible
   } else {
     state++;
   }
