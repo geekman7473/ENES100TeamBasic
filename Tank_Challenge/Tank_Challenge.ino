@@ -8,7 +8,7 @@
  * pin and vice versa).
  */
 SoftwareSerial mySerial(8,9); 
-Marker marker(3); // Will have to replace # with our team's marker #
+Marker marker(114); // Will have to replace # with our team's marker #
 RF_Comm rf(&mySerial, &marker);
 
 DFRTank tank;
@@ -47,38 +47,43 @@ void loop() {
         break;
       // Drive towards the center point
       case 2: 
-        // Check if the error of the angle is greater than 2 degrees
-        float err = marker.theta - atan2(tLocX - marker.x, tLocY - marker.y);
-        if (abs(err) > 0.005) {
-          state = 1; // Go back and fix the angle
-        }
-        // Calculate & drive the distance
-        else {
-          float distance = findDistance();
-          driveDistance(distance);
-          rf.updateLocation();
-          if (marker.x = 0.5 && marker.y = 1.0) {
-            state++;
+        {
+          // Check if the error of the angle is greater than 2 degrees
+          float err = marker.theta - atan2(tLocX - marker.x, tLocY - marker.y);
+          if (abs(err) > 0.005) {
+            state = 1; // Go back and fix the angle
+          }
+          // Calculate & drive the distance
+          else {
+            float distance = findDistance();
+            drive(1,1);
+            if (distance < 0.03) {
+              state++;
+            }
           }
         }
         break;
       //Turn perpendicular to wall
       case 3:
-        tTheta = 0;
-        turnToTarget();
+        {
+          tTheta = 0;
+          turnToTarget();
+        }
         break;
       //Turn up to look for board
       case 4:
-        tTheta = PI/4;
-        turnToTarget();
+        {
+          tTheta = PI/4;
+          turnToTarget();
+        }
         break;
     }
     
 }
 
 void drive(float left, float right){
-  tank.setLeftMotorPWM(left * 255);
-  tank.setRightMotorPWM(right * 255);
+  tank.setLeftMotorPWM(left * 255.0);
+  tank.setRightMotorPWM(right * 255.0);
 }
 
 void turnToTarget(){
@@ -86,7 +91,7 @@ void turnToTarget(){
   if(abs(err) > 0.005){
     drive(-1, 1); //Turn left until error is negligible
   } else {
-    state++:
+    state++;
   }
 }
 
@@ -99,7 +104,7 @@ float findDistance() {
   float diffX = abs(marker.x - desiredX);
   float diffY = abs(marker.y - desiredY);
 
-  float distance = sqrt((diffX)^2 + (diffY)^2); // Uses pythagorean thm to calculate the distance needed to travel
+  float distance = sqrt((diffX)*(diffX) + (diffY)*(diffY)); // Uses pythagorean thm to calculate the distance needed to travel
 }
 
 float findDistance(int x, int y) {
@@ -109,5 +114,5 @@ float findDistance(int x, int y) {
   float diffX = abs(marker.x - x);
   float diffY = abs(marker.y - y);
 
-  float distance = sqrt((diffX)^2 + (diffY)^2); // Uses pythagorean thm to calculate the distance needed to travel
+  float distance = sqrt((diffX)*(diffX) + (diffY)*(diffY)); // Uses pythagorean thm to calculate the distance needed to travel
 }
