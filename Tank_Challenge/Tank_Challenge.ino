@@ -19,8 +19,8 @@
  */
 
 // Pins
-const int TRIG_PIN = 6;
-const int ECHO_PIN = 7;
+const int TRIG_PIN = 7;
+const int ECHO_PIN = 6  ;
 
 // Anything over 400 cm (23200 us pulse) is "out of range"
 const unsigned int MAX_DIST = 23200;
@@ -32,7 +32,7 @@ const unsigned int MAX_DIST = 23200;
  * pin and vice versa).
  */
 SoftwareSerial mySerial(8,9); 
-Marker marker(114); // Will have to replace # with our team's marker #
+Marker marker(112); // Will have to replace # with our team's marker #
 RF_Comm rf(&mySerial, &marker);
 
 DFRTank tank;
@@ -139,6 +139,8 @@ void loop() {
         drive(0,0);
         break;
     }
+
+    delay(200);
 }
 
 void drive(float left, float right){
@@ -148,8 +150,8 @@ void drive(float left, float right){
 
 void turnToTarget(){
   float err = marker.theta - tTheta;
-  if(abs(err) > 0.005){
-    drive(-.3, .3); //Turn left until error is negligible
+  if(abs(err) > 0.01){
+    drive(-0.3, 0.3); //Turn left until error is negligible
   } else {
     state++;
   }
@@ -181,7 +183,6 @@ float findDistance(int x, int y) {
 
 //checks if wall is there based on known distance
 boolean wallThere() {
-  //TODO: Do the math...
   if (useUltrasonic() < 112) {
     return true;
   }
