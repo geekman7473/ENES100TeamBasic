@@ -126,10 +126,7 @@ void loop() {
         delay(100);
         drive(0,0);
         break;
-
-     
     }
-    
 }
 
 void drive(float left, float right){
