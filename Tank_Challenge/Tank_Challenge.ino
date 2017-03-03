@@ -68,7 +68,7 @@ void setup() {
   rf.updateLocation();
 
   //Finds vector from starting position to center of staging area
-  tTheta = atan2(tLocX - marker.x, tLocY - marker.y);
+  tTheta = atan2(tLocY - marker.y, tLocX - marker.x);
 }
 
 void loop() {
@@ -83,7 +83,7 @@ void loop() {
         mySerial.println(tTheta);
         turnToTarget();
         break;
-      // Drive towards the center point
+       Drive towards the center point
       case 2: 
         {
           mySerial.println("Case 2");
@@ -95,7 +95,7 @@ void loop() {
           // Calculate & drive the distance
           else {
             float distance = findDistance();
-            drive(.3,.3);
+            drive(.6,.6);
             if (distance < 0.03) {
               state++;
             }
@@ -149,6 +149,10 @@ void loop() {
     delay(200);
 }
 
+
+
+//Helper Methods
+
 void drive(float left, float right){
   tank.setLeftMotorPWM(left * 255.0);
   tank.setRightMotorPWM(right * 255.0);
@@ -156,8 +160,9 @@ void drive(float left, float right){
 
 void turnToTarget(){
   float err = marker.theta - tTheta;
+  Serial.println(abs(err));
   if(abs(err) > 0.01){
-    drive(-0.3, 0.3); //Turn left until error is negligible
+    drive(-1, 1); //Turn left until error is negligible
   } else {
     state++;
   }
