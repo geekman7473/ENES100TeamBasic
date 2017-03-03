@@ -1,6 +1,31 @@
 #include "enes100.h"
 #include "math.h"
 #include "dfr_tank.h"
+#include <SharpIR.h>
+
+/**
+ * HC-SR04 Ultrasonic Sensor
+ * 
+ * Description:
+ *  Connect the ultrasonic sensor to the Arduino as per the
+ *  hardware connections below.
+ * 
+ * Hardware Connections:
+ *  Arduino | HC-SR04 
+ *  -------------------
+ *    5V    |   VCC     
+ *    7     |   Trig     
+ *    8     |   Echo     
+ *    GND   |   GND
+ */
+
+// Pins
+const int TRIG_PIN = 6;
+const int ECHO_PIN = 7;
+
+// Anything over 400 cm (23200 us pulse) is "out of range"
+const unsigned int MAX_DIST = 23200;
+
 
 /*
  * Replace 8 and 9 with the pins you plan on using for RX and TX 
@@ -16,17 +41,28 @@ DFRTank tank;
 //Tracks state of FSM
 int state = 1; 
 //Pin for distance
-const int dSense=A0;
+const int dSense=A6;
 
 //Drives Robot to center of staging area
 float tLocX = .5;
 float tLocY = 1;
 float tTheta = 0;
 
+// Variables for ultrasonic sensor
+unsigned long t1;
+  unsigned long t2;
+  unsigned long pulse_width;
+  float cm;
+  float inches;
+
 void setup() {
   rf.startMission(); // Lets the Vision System (which is timing you) know that you are starting your mission
-  pinMode(dSense,OUTPUT);
+  pinMode(dSense,INPUT);
   Serial.begin(9600);
+
+  // The Trigger pin will tell the sensor to range find
+  pinMode(TRIG_PIN, OUTPUT);
+  digitalWrite(TRIG_PIN, LOW);
 
   tank.init();
 
@@ -72,6 +108,26 @@ void loop() {
         tTheta = PI/4;
         turnToTarget();
         break;
+      // Check for board, using distance senor
+      case 5:
+        if (wallThere()) {
+          drive (0.5, 0.5);
+          state++;
+        }
+        break;
+      // Turn straight to continue on the path beyond the wall
+      case 6:
+        drive(0,0);
+        if (marker.x > 1.0) {
+          tTheta = 0;
+          turnToTarget();
+        }
+        drive(1,1);
+        delay(100);
+        drive(0,0);
+        break;
+
+     
     }
     
 }
@@ -100,6 +156,7 @@ float findDistance() {
   float diffY = abs(marker.y - desiredY);
 
   float distance = sqrt((diffX)^2 + (diffY)^2); // Uses pythagorean thm to calculate the distance needed to travel
+  return distance;
 }
 
 float findDistance(int x, int y) {
@@ -110,4 +167,41 @@ float findDistance(int x, int y) {
   float diffY = abs(marker.y - y);
 
   float distance = sqrt((diffX)^2 + (diffY)^2); // Uses pythagorean thm to calculate the distance needed to travel
+  return distance;
 }
+
+//checks if wall is there based on known distance
+boolean wallThere() {
+  //TODO: Do the math...
+  if (useUltrasonic() < ??) {
+    return true;
+  }
+  return false;
+}
+
+float useUltrasonic() {
+  // Hold the trigger pin high for at least 10 us
+  digitalWrite(TRIG_PIN, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(TRIG_PIN, LOW);
+
+  // Wait for pulse on echo pin
+  while ( digitalRead(ECHO_PIN) == 0 );
+
+  // Measure how long the echo pin was held high (pulse width)
+  // Note: the micros() counter will overflow after ~70 min
+  t1 = micros();
+  while ( digitalRead(ECHO_PIN) == 1);
+  t2 = micros();
+  pulse_width = t2 - t1;
+
+  // Calculate distance in centimeters. The constants
+  // are found in the datasheet, and calculated from the assumed speed 
+  //of sound in air at sea level (~340 m/s).
+  cm = pulse_width / 58.0;
+  return cm;
+
+  // Wait at least 60ms before next measurement
+  // delay(60);
+}
+
