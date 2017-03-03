@@ -1,7 +1,6 @@
-#include "enes100.h"
+#include <enes100.h>
 #include "math.h"
-#include "dfr_tank.h"
-#include <SharpIR.h>
+#include <dfr_tank.h>
 
 /**
  * HC-SR04 Ultrasonic Sensor
@@ -20,8 +19,8 @@
  */
 
 // Pins
-const int TRIG_PIN = 6;
-const int ECHO_PIN = 7;
+const int TRIG_PIN = 7;
+const int ECHO_PIN = 6  ;
 
 // Anything over 400 cm (23200 us pulse) is "out of range"
 const unsigned int MAX_DIST = 23200;
@@ -33,7 +32,7 @@ const unsigned int MAX_DIST = 23200;
  * pin and vice versa).
  */
 SoftwareSerial mySerial(8,9); 
-Marker marker(114); // Will have to replace # with our team's marker #
+Marker marker(112); // Will have to replace # with our team's marker #
 RF_Comm rf(&mySerial, &marker);
 
 DFRTank tank;
@@ -80,6 +79,7 @@ void loop() {
       //State 1 turns robot to correct angle
       case 1:
         mySerial.println("Case 1");
+        mySerial.println(tTheta);
         turnToTarget();
         break;
       // Drive towards the center point
@@ -88,7 +88,7 @@ void loop() {
           mySerial.println("Case 2");
           // Check if the error of the angle is greater than 2 degrees
           float err = marker.theta - atan2(tLocX - marker.x, tLocY - marker.y);
-          if (abs(err) > 0.005) {
+          if (abs(err) > 0.01) {
             state = 1; // Go back and fix the angle
           }
           // Calculate & drive the distance
@@ -138,6 +138,8 @@ void loop() {
         drive(0,0);
         break;
     }
+
+    delay(200);
 }
 
 void drive(float left, float right){
@@ -147,8 +149,8 @@ void drive(float left, float right){
 
 void turnToTarget(){
   float err = marker.theta - tTheta;
-  if(abs(err) > 0.005){
-    drive(-1, 1); //Turn left until error is negligible
+  if(abs(err) > 0.01){
+    drive(-0.6, 0.6); //Turn left until error is negligible
   } else {
     state++;
   }
@@ -180,7 +182,6 @@ float findDistance(int x, int y) {
 
 //checks if wall is there based on known distance
 boolean wallThere() {
-  //TODO: Do the math...
   if (useUltrasonic() < 112) {
     return true;
   }
