@@ -1,6 +1,6 @@
-#include <enes100.h>
-#include "math.h"
 #include <dfr_tank.h>
+#include "enes100.h"
+#include "math.h"
 
 /**
  * HC-SR04 Ultrasonic Sensor
@@ -79,6 +79,7 @@ void loop() {
       //State 1 turns robot to correct angle
       case 1:
         mySerial.println("Case 1");
+        mySerial.print("tTheta:");
         mySerial.println(tTheta);
         turnToTarget();
         break;
@@ -94,7 +95,7 @@ void loop() {
           // Calculate & drive the distance
           else {
             float distance = findDistance();
-            drive(1,1);
+            drive(.3,.3);
             if (distance < 0.03) {
               state++;
             }
@@ -139,7 +140,7 @@ void loop() {
           tTheta = 0;
           turnToTarget();
         }
-        drive(1,1);
+        drive(.3,.3);
         delay(100);
         drive(0,0);
         break;
@@ -156,7 +157,7 @@ void drive(float left, float right){
 void turnToTarget(){
   float err = marker.theta - tTheta;
   if(abs(err) > 0.01){
-    drive(-0.6, 0.6); //Turn left until error is negligible
+    drive(-0.3, 0.3); //Turn left until error is negligible
   } else {
     state++;
   }
