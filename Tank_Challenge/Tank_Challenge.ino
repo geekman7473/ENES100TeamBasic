@@ -79,11 +79,13 @@ void loop() {
     switch (state) {
       //State 1 turns robot to correct angle
       case 1:
+        mySerial.println("Case 1");
         turnToTarget();
         break;
       // Drive towards the center point
       case 2: 
         {
+          mySerial.println("Case 2");
           // Check if the error of the angle is greater than 2 degrees
           float err = marker.theta - atan2(tLocX - marker.x, tLocY - marker.y);
           if (abs(err) > 0.005) {
@@ -102,6 +104,7 @@ void loop() {
       //Turn perpendicular to wall
       case 3:
         {
+          mySerial.println("Case 3");
           tTheta = 0;
           turnToTarget();
         }
@@ -109,12 +112,14 @@ void loop() {
       //Turn up to look for board
       case 4:
         {
+          mySerial.println("Case 4");
           tTheta = PI/4;
           turnToTarget();
         }
         break;
       // Check for board, using distance senor
       case 5:
+        mySerial.println("Case 5");
         if (wallThere()) {
           drive (0.5, 0.5);
           state++;
@@ -122,6 +127,7 @@ void loop() {
         break;
       // Turn straight to continue on the path beyond the wall
       case 6:
+        mySerial.println("Case 6");
         drive(0,0);
         if (marker.x > 1.0) {
           tTheta = 0;
@@ -157,8 +163,7 @@ float findDistance() {
   float diffX = abs(marker.x - desiredX);
   float diffY = abs(marker.y - desiredY);
 
-
-  float distance = sqrt((diffX)^2 + (diffY)^2); // Uses pythagorean thm to calculate the distance needed to travel
+  float distance = sqrt((diffX)*(diffX) + (diffY)*(diffY)); // Uses pythagorean thm to calculate the distance needed to travel
   return distance;
 }
 
@@ -176,7 +181,7 @@ float findDistance(int x, int y) {
 //checks if wall is there based on known distance
 boolean wallThere() {
   //TODO: Do the math...
-  if (useUltrasonic() < ??) {
+  if (useUltrasonic() < 112) {
     return true;
   }
   return false;
