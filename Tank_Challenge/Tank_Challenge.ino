@@ -68,7 +68,7 @@ void setup() {
   rf.updateLocation();
 
   //Finds vector from starting position to center of staging area
-  tTheta = atan2(tLocX - marker.x, tLocY - marker.y);
+  tTheta = atan2(tLocY - marker.y, tLocX - marker.x);
 }
 
 void loop() {
@@ -87,16 +87,18 @@ void loop() {
       case 2: 
         {
           mySerial.println("Case 2");
+          mySerial.print("Marker pos: ");
+          mySerial.print(marker.x);
+          mySerial.println(marker.y);
           // Check if the error of the angle is greater than 2 degrees
-          float err = marker.theta - atan2(tLocX - marker.x, tLocY - marker.y);
+          float err = marker.theta - atan2(tLocY - marker.y, tLocX - marker.x);
+          mySerial.println(err);
           if (abs(err) > 0.01) {
             state = 1; // Go back and fix the angle
-          }
-          // Calculate & drive the distance
-          else {
+          } else { // Calculate & drive the distance
             float distance = findDistance();
-            drive(.3,.3);
-            if (distance < 0.03) {
+            drive(.6,.6);
+            if (distance < 0.05) {
               state++;
             }
           }
@@ -122,7 +124,7 @@ void loop() {
       case 5:
         mySerial.println("Case 5");
         if (wallThere()) {
-          drive (0.3, 0.3);
+          drive (0.6, 0.6);
           state++;
         }
         break;
@@ -134,13 +136,11 @@ void loop() {
           tTheta = 0;
           turnToTarget();
         }
-        drive(.3,.3);
+        drive(.6,.6);
         delay(100);
         drive(0,0);
         break;
     }
-
-    delay(200);
 }
 
 void drive(float left, float right){
@@ -150,8 +150,12 @@ void drive(float left, float right){
 
 void turnToTarget(){
   float err = marker.theta - tTheta;
-  if(abs(err) > 0.01){
-    drive(-0.3, 0.3); //Turn left until error is negligible
+  mySerial.print("marker");
+  mySerial.println(marker.theta);
+  mySerial.print("tTheta");
+  mySerial.println(tTheta);
+  if(abs(err) > .5){
+    drive(-0.7, 0.7); //Turn left until error is negligible
   } else {
     state++;
   }
