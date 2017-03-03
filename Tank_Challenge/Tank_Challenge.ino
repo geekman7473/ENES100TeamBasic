@@ -123,14 +123,20 @@ void loop() {
       // Check for board, using distance senor
       case 5:
         mySerial.println("Case 5");
-        if (wallThere()) {
-          drive (0.6, 0.6);
+        if (!wallThere()) {
+          drive (0.5, 0.5);
+          state += 2;
+        } else {
           state++;
         }
         break;
-      // Turn straight to continue on the path beyond the wall
+      //Turn to other side and drive that way
       case 6:
-        mySerial.println("Case 6");
+        tTheta = -PI/4;
+        turnToTarget();
+      // Turn straight to continue on the path beyond the wall
+      case 7:
+        mySerial.println("Case 7");
         drive(0,0);
         if (marker.x > 1.0) {
           tTheta = 0;
