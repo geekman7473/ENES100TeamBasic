@@ -87,13 +87,15 @@ void loop() {
       case 2: 
         {
           mySerial.println("Case 2");
+          mySerial.print("Marker pos: ");
+          mySerial.print(marker.x);
+          mySerial.println(marker.y);
           // Check if the error of the angle is greater than 2 degrees
-          float err = marker.theta - atan2(tLocX - marker.x, tLocY - marker.y);
+          float err = marker.theta - atan2(tLocY - marker.y, tLocX - marker.x);
+          mySerial.println(err);
           if (abs(err) > 0.01) {
             state = 1; // Go back and fix the angle
-          }
-          // Calculate & drive the distance
-          else {
+          } else { // Calculate & drive the distance
             float distance = findDistance();
             drive(.6,.6);
             if (distance < 0.03) {
@@ -140,13 +142,11 @@ void loop() {
           tTheta = 0;
           turnToTarget();
         }
-        drive(.3,.3);
+        drive(.6,.6);
         delay(100);
         drive(0,0);
         break;
     }
-
-    delay(200);
 }
 
 
@@ -160,9 +160,12 @@ void drive(float left, float right){
 
 void turnToTarget(){
   float err = marker.theta - tTheta;
-  Serial.println(abs(err));
-  if(abs(err) > 0.01){
-    drive(-1, 1); //Turn left until error is negligible
+  mySerial.print("marker");
+  mySerial.println(marker.theta);
+  mySerial.print("tTheta");
+  mySerial.println(tTheta);
+  if(abs(err) > .5){
+    drive(-0.7, 0.7); //Turn left until error is negligible
   } else {
     state++;
   }
