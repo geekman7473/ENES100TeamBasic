@@ -51,6 +51,21 @@ void loop() {
     }
   
     turnToAngle(isTopPath ? -PI/2 : PI/2);
+
+    driveToPositionY(isTopPath ? .1 : .9);
+
+    turnToAngle(0);
+
+    if(getUltrasonic() > 100){
+      driveToPositionX(1.5);
+    } else {
+      turnToAngle(isTopPath ? PI/2 : -PI/2);
+      driveToPositionY(isTopPath ? .9 : .1);
+      turnToAngle(0);
+      driveToPositionX(1.5);
+    }
+
+    isFinished = true;
     
     tank.turnOffMotors();
   }
