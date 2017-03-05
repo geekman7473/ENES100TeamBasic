@@ -91,6 +91,18 @@ void driveToPositionY(float target){
   }
 }
 
+void driveToPositionX(float target){
+  if(target > marker.x){
+    while(target > marker.x){
+      drive(.6, .6);
+    }
+  } else {
+    while(marker.x > target){
+      drive(.6, .6);
+    }
+  }
+}
+
 void drive(float left, float right){
   tank.setLeftMotorPWM(left * 255);
   tank.setRightMotorPWM(right * 255);
