@@ -21,6 +21,9 @@ Marker marker(108); // Will have to replace # with our team's marker #
 RF_Comm rf(&mySerial, &marker);
 
 
+boolean isTopPath = false;
+boolean isFinished = false;
+
 DFRTank tank;
 
 
@@ -38,15 +41,44 @@ void setup() {
 }
 
 void loop() {
-  rf.updateLocation();
+  if(!isFinished){
+    rf.updateLocation();
   
-  while(angleDiff(marker.theta, (3.14159653/2.0)) > 0.25){
+    if(marker.y > .5){ //if top half turn down
+        isTopPath = true;
+    } else { //if bottom half, turn up
+        isTopPath = false;
+    }
+  
+    turnToAngle(isTopPath ? -PI/2 : PI/2);
+    
+    tank.turnOffMotors();
+  }
+}
+
+void turnToAngle(float theta){
+    while(angleDiff(marker.theta, theta) > 0.25){
     tank.setLeftMotorPWM(-125);
     tank.setRightMotorPWM(125);
     rf.updateLocation();
   }
-    
-  tank.turnOffMotors();
+}
+
+void driveToPositionY(float target){
+  if(target > marker.y){
+    while(target > marker.y){
+      drive(.6, .6);
+    }
+  } else {
+    while(marker.y > target){
+      drive(.6, .6);
+    }
+  }
+}
+
+void drive(float left, float right){
+  tank.setLeftMotorPWM(left * 255);
+  tank.setRightMotorPWM(right * 255);
 }
 
 float angleDiff(float theta, float phi){
