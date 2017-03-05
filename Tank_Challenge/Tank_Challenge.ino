@@ -83,7 +83,7 @@ void loop() {
         mySerial.println(tTheta);
         turnToTarget();
         break;
-      // Drive towards the center point
+       Drive towards the center point
       case 2: 
         {
           mySerial.println("Case 2");
@@ -98,7 +98,7 @@ void loop() {
           } else { // Calculate & drive the distance
             float distance = findDistance();
             drive(.6,.6);
-            if (distance < 0.05) {
+            if (distance < 0.03) {
               state++;
             }
           }
@@ -148,6 +148,10 @@ void loop() {
         break;
     }
 }
+
+
+
+//Helper Methods
 
 void drive(float left, float right){
   tank.setLeftMotorPWM(left * 255.0);
