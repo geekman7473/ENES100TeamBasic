@@ -39,22 +39,18 @@ void setup() {
 
 void loop() {
   rf.updateLocation();
-
-  //Serial.println("Distance");
-  //Serial.println(getUltrasonic());
-
-  mySerial.println("Theta");
-  mySerial.println(marker.theta);
-  mySerial.println(marker.theta - (3.14159653/2.0));
-  mySerial.println(abs(marker.theta - (3.14159653/2.0)));
   
-  while(abs(marker.theta - (3.14159653/2.0)) > 0.01){
-    tank.setLeftMotorPWM(-175);
-    tank.setRightMotorPWM(175);
+  while(angleDiff(marker.theta, (3.14159653/2.0)) > 0.25){
+    tank.setLeftMotorPWM(-125);
+    tank.setRightMotorPWM(125);
     rf.updateLocation();
   }
     
-  //tank.turnOffMotors();
+  tank.turnOffMotors();
+}
+
+float angleDiff(float theta, float phi){
+  return (theta - phi) >= 0 ? theta - phi : -(theta - phi);
 }
 
 float getUltrasonic(){
