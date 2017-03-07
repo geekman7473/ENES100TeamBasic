@@ -3,6 +3,7 @@
 #include "math.h"
 #include <PID_v1.h>
 
+
 // Pins
 const int TRIG_PIN = 12;
 const int ECHO_PIN = 13;
@@ -24,7 +25,7 @@ RF_Comm rf(&mySerial, &marker);
 //Define PID variables
 double tTheta, motorOutput;
 
-PID turnPID(&marker.theta, &motorOutput, &tTheta, 200, 20, 0, DIRECT);
+PID turnPID((double*)&marker.theta, &motorOutput, &tTheta, 250, 200, 0, DIRECT);
 
 boolean isTopPath = false;
 boolean isFinished = false;
@@ -43,9 +44,9 @@ void setup() {
 
   tank.init();
 
-  myPID.SetMode(AUTOMATIC);
-  myPID.SetSampleTime(10);
-  myPID.SetOutputLimits(-255,255);
+  turnPID.SetMode(AUTOMATIC);
+  turnPID.SetSampleTime(10);
+  turnPID.SetOutputLimits(-255,255);
 }
 
 void loop() {
@@ -60,15 +61,16 @@ void loop() {
   
     turnToAngle(isTopPath ? -PI/2 : PI/2);
 
-    driveToPositionY(isTopPath ? 0.2 : 1.8);
+    driveToPositionY(isTopPath ? 0.3 : 1.7);
 
     turnToAngle(0);
-
-    if(getUltrasonic() > 100){
+    
+    mySerial.println(getUltrasonic());
+    if(getUltrasonic() > 30){
       driveToPositionX(1.5);
     } else {
       turnToAngle(isTopPath ? PI/2 : -PI/2);
-      driveToPositionY(isTopPath ? 1.8 : 0.2);
+      driveToPositionY(isTopPath ? 1.7 : 0.3);
       turnToAngle(0);
       driveToPositionX(1.5);
     }
@@ -84,7 +86,7 @@ void turnToAngle(float theta){
   rf.updateLocation();
   
   while(angleDiff(marker.theta, theta) > 0.25){
-    myPID.Compute();
+    turnPID.Compute();
     tank.setLeftMotorPWM(-motorOutput);
     tank.setRightMotorPWM(motorOutput);
     rf.updateLocation();
@@ -133,37 +135,44 @@ float angleDiff(float theta, float phi){
 }
 
 float getUltrasonic(){
+  unsigned long timer1 = millis();
+  float sum = 0;
+  int count = 0;
+
+  while(millis() - timer1 < 1500){
+    unsigned long t1;
+    unsigned long t2;
+    unsigned long pulse_width;
+    float cm;
+    float inches;
   
-  unsigned long t1;
-  unsigned long t2;
-  unsigned long pulse_width;
-  float cm;
-  float inches;
-
-  // Hold the trigger pin high for at least 10 us
-  digitalWrite(TRIG_PIN, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(TRIG_PIN, LOW);
-
-  // Wait for pulse on echo pin
-  while ( digitalRead(ECHO_PIN) == 0 );
-
-  // Measure how long the echo pin was held high (pulse width)
-  // Note: the micros() counter will overflow after ~70 min
-  t1 = micros();
-  while ( digitalRead(ECHO_PIN) == 1);
-  t2 = micros();
-  pulse_width = t2 - t1;
-
-  // Calculate distance in centimeters and inches. The constants
-  // are found in the datasheet, and calculated from the assumed speed 
-  //of sound in air at sea level (~340 m/s).
-  cm = pulse_width / 58.0;
-  inches = pulse_width / 148.0;
-
-  // Wait at least 60ms before next measurement
-  delay(60);
-
-  return cm;
+    // Hold the trigger pin high for at least 10 us
+    digitalWrite(TRIG_PIN, HIGH);
+    delayMicroseconds(10);
+    digitalWrite(TRIG_PIN, LOW);
+  
+    // Wait for pulse on echo pin
+    while ( digitalRead(ECHO_PIN) == 0 );
+  
+    // Measure how long the echo pin was held high (pulse width)
+    // Note: the micros() counter will overflow after ~70 min
+    t1 = micros();
+    while ( digitalRead(ECHO_PIN) == 1);
+    t2 = micros();
+    pulse_width = t2 - t1;
+  
+    // Calculate distance in centimeters and inches. The constants
+    // are found in the datasheet, and calculated from the assumed speed 
+    //of sound in air at sea level (~340 m/s).
+    cm = pulse_width / 58.0;
+    inches = pulse_width / 148.0;
+  
+    // Wait at least 60ms before next measurement
+    delay(60);
+  
+    sum += cm;
+    count++;
+  }
+  return sum / count;
 }
 
