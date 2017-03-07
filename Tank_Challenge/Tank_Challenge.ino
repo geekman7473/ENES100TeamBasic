@@ -164,7 +164,7 @@ void turnToTarget(){
   mySerial.println(marker.theta);
   mySerial.print("tTheta");
   mySerial.println(tTheta);
-  if(abs(err) > .5){
+  if(abs(err) > .1){
     drive(-0.7, 0.7); //Turn left until error is negligible
   } else {
     state++;
