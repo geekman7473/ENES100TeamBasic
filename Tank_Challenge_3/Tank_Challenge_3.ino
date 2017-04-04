@@ -25,7 +25,7 @@ RF_Comm rf(&mySerial, &marker);
 //Define PID variables
 double tTheta, motorOutput;
 
-PID turnPID((double*)&marker.theta, &motorOutput, &tTheta, 250, 500, 0, DIRECT);
+PID turnPID((double*)&marker.theta, &motorOutput, &tTheta, 250, 600, 0, DIRECT);
 
 boolean isTopPath = false;
 boolean isFinished = false;
@@ -70,7 +70,7 @@ void loop() {
     mySerial.println(marker.x);
     mySerial.println(marker.y);
 
-    driveToPositionY(isTopPath ? 0.3 : 1.7);
+    driveToPositionY(.5, isTopPath ? 0.3 : 1.7);
 
     mySerial.println(marker.x);
     mySerial.println(marker.y);
@@ -81,18 +81,19 @@ void loop() {
     mySerial.println(marker.y);
 
     //Pool is located at (2.0, 1.5)
+    mySerial.print("Distance to wall: ");
     mySerial.println(getUltrasonic());
     if(getUltrasonic() > 30){
-      driveToPositionX(1.5);
+      driveToPositionX(1.5, (isTopPath ? 1.7 : 0.3));
       turnToAngle(atan2(1.5 - marker.y, 2.0 - marker.x));
-      driveToPositionX(2.0);
+      driveToPositionX(2.0, 1.5);
     } else {
       turnToAngle(isTopPath ? PI/2 : -PI/2);
-      driveToPositionY(isTopPath ? 1.7 : 0.3);
+      driveToPositionY(.5, isTopPath ? 1.7 : 0.3);
       turnToAngle(0);
-      driveToPositionX(1.5);
+      driveToPositionX(1.5, isTopPath ? 1.7 : 0.3);
       turnToAngle(atan2(1.5 - marker.y, 2.0 - marker.x));
-      driveToPositionY(1.5);
+      driveToPositionY(2, 1.5);
     }
 
     isFinished = true;
@@ -113,35 +114,43 @@ void turnToAngle(float theta){
   }
 }
 
-void driveToPositionY(float target){
+void driveToPositionY(float targetX, float targetY){
   rf.updateLocation();
-  
-  if(target > marker.y){
-    while(target > marker.y){
-      drive(.5, .5);
-      rf.updateLocation();
+
+  if(angleDiff(atan2(targetY - marker.y, targetX - marker.x), marker.theta) < 0.15){
+    if(targetY > marker.y){
+      while(targetY > marker.y){
+        drive(.5, .5);
+        rf.updateLocation();
+      }
+    } else {
+      while(marker.y > targetY){
+        drive(.5, .5);
+        rf.updateLocation();
+      }
     }
   } else {
-    while(marker.y > target){
-      drive(.5, .5);
-      rf.updateLocation();
-    }
+    turnToAngle(atan2(targetY - marker.y, targetX - marker.x));
   }
 }
 
-void driveToPositionX(float target){
+void driveToPositionX(float targetX, float targetY){
   rf.updateLocation();
   
-  if(target > marker.x){
-    while(target > marker.x){
-      drive(.5, .5);
-      rf.updateLocation();
+  if(angleDiff(atan2(targetY - marker.y, targetX - marker.x), marker.theta) < 0.15){
+    if(targetX > marker.x){
+      while(targetX > marker.x){
+        drive(.5, .5);
+        rf.updateLocation();
+      }
+    } else {
+      while(marker.x > targetX){
+        drive(.5, .5);
+        rf.updateLocation();
+      }
     }
   } else {
-    while(marker.x > target){
-      drive(.5, .5);
-      rf.updateLocation();
-    }
+    turnToAngle(atan2(targetY - marker.y, targetX - marker.x));
   }
 }
 
