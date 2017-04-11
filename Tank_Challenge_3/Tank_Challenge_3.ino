@@ -19,13 +19,13 @@ unsigned long t1;
   float inches;
 
 SoftwareSerial mySerial(8,9); 
-Marker marker(118); // Will have to replace # with our team's marker #
+Marker marker(7); // Will have to replace # with our team's marker #
 RF_Comm rf(&mySerial, &marker);
 
 //Define PID variables
 double tTheta, motorOutput;
 
-PID turnPID((double*)&marker.theta, &motorOutput, &tTheta, 350, 600, 0, DIRECT);
+PID turnPID((double*)&marker.theta, &motorOutput, &tTheta, 350, 175, 0, DIRECT);
 
 boolean isTopPath = false;
 boolean isFinished = false;
@@ -39,7 +39,8 @@ void setup() {
   pinMode(TRIG_PIN, OUTPUT);
   digitalWrite(TRIG_PIN, LOW);
   
-  rf.transmitData(START_MISSION, NO_DATA); // Lets the Vision System (which is timing you) know that you are starting your mission
+  //rf.transmitData(START_MISSION, NO_DATA); // Lets the Vision System (which is timing you) know that you are starting your mission
+  rf.println("BASIC TEST");
   rf.println("START");
   rf.transmitData(NAV, CHEMICAL);
   tank.init();
@@ -56,7 +57,7 @@ void loop() {
 
     rf.println(marker.x);
     rf.println(marker.y);
-    
+        
     if(marker.y > 1){ //if top half turn down
         isTopPath = true;
     } else { //if bottom half, turn up
@@ -65,17 +66,25 @@ void loop() {
 
     rf.println(marker.x);
     rf.println(marker.y);
+
+    rf.print("Turn marker to angle: ");
+    rf.println(isTopPath ? -PI/2 : PI/2);
   
     turnToAngle(isTopPath ? -PI/2 : PI/2);
 
     rf.println(marker.x);
     rf.println(marker.y);
 
+    rf.print("Move marker to position 0.5, ");
+    rf.println(isTopPath ? 0.3 : 1.7);
+    
     driveToPositionY(.5, isTopPath ? 0.3 : 1.7);
 
     rf.println(marker.x);
     rf.println(marker.y);
 
+    rf.println("Turn marker to 0 position");
+    
     turnToAngle(0);
 
     rf.println(marker.x);
@@ -83,17 +92,35 @@ void loop() {
 
     //Pool is located at (2.0, 1.5)
     rf.print("Distance to wall: ");
-    rf.println(getUltrasonic());
-    if(getUltrasonic() > 30){
-      driveToPositionX(1.5, (isTopPath ? 1.7 : 0.3));
+
+    float ultra = getUltrasonic();
+    
+    rf.println(ultra);
+    if(ultra > 30.0){
+      rf.print("Move marker to 1.5, ");
+      rf.println(isTopPath ? 1.7 : 0.3);
+      driveToPositionX(1.5, (isTopPath ? 0.3 : 1.7));
+      rf.print("Turn to angle: ");
+      rf.println(atan2(1.5 - marker.y, 2.0 - marker.x));
       turnToAngle(atan2(1.5 - marker.y, 2.0 - marker.x));
+      rf.print("Move marker to position 2.0, 1.5");
       driveToPositionX(2.0, 1.5);
     } else {
+      rf.print("Turn to angle: ");
+      rf.println(isTopPath ? PI/2 : -PI/2);
       turnToAngle(isTopPath ? PI/2 : -PI/2);
+      rf.print("Move marker to: 0.5, ");
+      rf.println(isTopPath ? 1.7 : 0.3);
       driveToPositionY(.5, isTopPath ? 1.7 : 0.3);
+      rf.println("Turn to zero position");
       turnToAngle(0);
+      rf.print("Move to position: 1.5, ");
+      rf.println(isTopPath ? 1.7 : 0.3);
       driveToPositionX(1.5, isTopPath ? 1.7 : 0.3);
+      rf.print("Turn to angle: ");
+      rf.println(atan2(1.5 - marker.y, 2.0 - marker.x));
       turnToAngle(atan2(1.5 - marker.y, 2.0 - marker.x));
+      rf.println("Move to location 2, 1.5");
       driveToPositionY(2, 1.5);
     }
 
@@ -107,12 +134,13 @@ void turnToAngle(float theta){
   tTheta = theta;
   rf.updateLocation();
   
-  while(angleDiff(marker.theta, theta) > 0.15){
+  while(angleDiff(marker.theta, theta) > 0.08){
     turnPID.Compute();
     tank.setLeftMotorPWM(-motorOutput);
     tank.setRightMotorPWM(motorOutput);
     rf.updateLocation();
   }
+  tank.turnOffMotors();
 }
 
 void driveToPositionY(float targetX, float targetY){
@@ -133,7 +161,7 @@ void driveToPositionY(float targetX, float targetY){
 void driveToPositionX(float targetX, float targetY){
   rf.updateLocation();
   
-  if(angleDiff(atan2(targetY - marker.y, targetX - marker.x), marker.theta) < 0.15){
+  //if(angleDiff(marker.theta, atan2(targetY - marker.y, targetX - marker.x)) < 0.15){
     if(targetX > marker.x){
       while(targetX > marker.x){
         drive(.5, .5);
@@ -145,14 +173,14 @@ void driveToPositionX(float targetX, float targetY){
         rf.updateLocation();
       }
     }
-  } else {
-    turnToAngle(atan2(targetY - marker.y, targetX - marker.x));
-  }
+  //} else {
+  //  turnToAngle(atan2(targetY - marker.y, targetX - marker.x));
+  //}
 }
 
 void drive(float left, float right){
-  tank.setLeftMotorPWM(left * 255);
-  tank.setRightMotorPWM(right * 255);
+  tank.setLeftMotorPWM(1 * (left * 255));
+  tank.setRightMotorPWM(1 * (right * 255));
 }
 
 float angleDiff(float theta, float phi){
