@@ -25,7 +25,7 @@ RF_Comm rf(&mySerial, &marker);
 //Define PID variables
 double tTheta, motorOutput;
 
-PID turnPID((double*)&marker.theta, &motorOutput, &tTheta, 350, 175, 0, DIRECT);
+PID turnPID((double*)&marker.theta, &motorOutput, &tTheta, 450, 3000, 0, DIRECT);
 
 boolean isTopPath = false;
 boolean isFinished = false;
@@ -145,37 +145,53 @@ void turnToAngle(float theta){
 
 void driveToPositionY(float targetX, float targetY){
   rf.updateLocation();
-    if(targetY > marker.y){
-      while(targetY > marker.y){
-        drive(.5, .5);
-        rf.updateLocation();
+      if(targetY > marker.y){
+        while(targetY > marker.y){
+          if(angleDiff(marker.theta, atan2(targetY - marker.y, targetX - marker.x)) < 0.4){
+            drive(.5, .5);
+          } else {
+            turnToAngle(atan2(targetY - marker.y, targetX - marker.x));
+          }
+          rf.updateLocation();
+        }
+      } else {
+        while(marker.y > targetY){
+          if(angleDiff(marker.theta, atan2(targetY - marker.y, targetX - marker.x)) < 0.4){
+            drive(.5, .5);
+          } else {
+            turnToAngle(atan2(targetY - marker.y, targetX - marker.x));
+          }
+          rf.updateLocation();
+        }
       }
-    } else {
-      while(marker.y > targetY){
-        drive(.5, .5);
-        rf.updateLocation();
-      }
-    }
 }
 
 void driveToPositionX(float targetX, float targetY){
   rf.updateLocation();
   
-  //if(angleDiff(marker.theta, atan2(targetY - marker.y, targetX - marker.x)) < 0.15){
+  if(angleDiff(marker.theta, atan2(targetY - marker.y, targetX - marker.x)) < 0.4){
     if(targetX > marker.x){
       while(targetX > marker.x){
-        drive(.5, .5);
-        rf.updateLocation();
+          if(angleDiff(marker.theta, atan2(targetY - marker.y, targetX - marker.x)) < 0.4){
+            drive(.5, .5);
+          } else {
+            turnToAngle(atan2(targetY - marker.y, targetX - marker.x));
+          }        
+          rf.updateLocation();
       }
     } else {
       while(marker.x > targetX){
-        drive(.5, .5);
-        rf.updateLocation();
+          if(angleDiff(marker.theta, atan2(targetY - marker.y, targetX - marker.x)) < 0.4){
+            drive(.5, .5);
+          } else {
+            turnToAngle(atan2(targetY - marker.y, targetX - marker.x));
+          }
+          rf.updateLocation();
       }
     }
-  //} else {
-  //  turnToAngle(atan2(targetY - marker.y, targetX - marker.x));
-  //}
+  } else {
+    turnToAngle(atan2(targetY - marker.y, targetX - marker.x));
+  }
 }
 
 void drive(float left, float right){
