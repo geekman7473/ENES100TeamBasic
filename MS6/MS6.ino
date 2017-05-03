@@ -11,12 +11,15 @@ const int RIGHT_MOTOR_PWM = 5;
 const int LEFT_MOTOR_A = 13;
 const int LEFT_MOTOR_B = 12;
 const int LEFT_MOTOR_PWM = 3;
+const int PUMP_NEUT_HIGH = 0;
+const int PUMP_COLL_HIGH = 1;
+const int PUMP_SHARED_LOW = 11;
 
 boolean finished = false;
 
-SoftwareSerial mySerial(8,9);
-Marker marker(102);
-RF_Comm rf(&mySerial, &marker);
+//SoftwareSerial mySerial(8,9);
+//Marker marker(102);
+//RF_Comm rf(&mySerial, &marker);
 
 Servo myservo;
 
@@ -27,17 +30,30 @@ void setup() {
   pinMode(LEFT_MOTOR_A, OUTPUT);
   pinMode(LEFT_MOTOR_B, OUTPUT);
   pinMode(LEFT_MOTOR_PWM, OUTPUT);
+  
+  pinMode(PUMP_NEUT_HIGH, OUTPUT);
+  pinMode(PUMP_COLL_HIGH, OUTPUT);
+  pinMode(PUMP_SHARED_LOW, OUTPUT);
 
   pinMode(SERVO_PIN, OUTPUT);
+
+  digitalWrite(PUMP_SHARED_LOW, LOW);
+  digitalWrite(PUMP_NEUT_HIGH, LOW);
+  digitalWrite(PUMP_COLL_HIGH, LOW);
+  
   myservo.attach(SERVO_PIN);
 
-  rf.transmitData(NAV, CHEMICAL);
+  //rf.transmitData(NAV, CHEMICAL);
 }
 
 void loop() {
-  rf.updateLocation();
+
+  myservo.write(60);
+  delay(2000);
+  myservo.write(90);
+  delay(100000);
   
-  if(!finished){
+  /*if(!finished){
     
     myservo.write(60);
     
@@ -53,7 +69,7 @@ void loop() {
     myservo.write(90);
 
     rf.transmitData(BASE, getPH());
-  }
+  }*/
   
 }
 

@@ -15,6 +15,9 @@ const int LEFT_MOTOR_B = 12;
 const int LEFT_MOTOR_PWM = 3;
 const int PH_PIN = 0; //A0
 const int SERVO_PIN = 6;
+const int PUMP_NEUT_HIGH = 0;
+const int PUMP_COLL_HIGH = 1;
+const int PUMP_SHARED_LOW = 11;
 
 // Anything over 400 cm (23200 us pulse) is "out of range"
 const unsigned int MAX_DIST = 23200;
@@ -27,7 +30,7 @@ unsigned long t1;
   float inches;
 
 SoftwareSerial mySerial(8,9); 
-Marker marker(102); // Will have to replace # with our team's marker #
+Marker marker(6); // Will have to replace # with our team's marker #
 RF_Comm rf(&mySerial, &marker);
 
 Servo myservo;
@@ -35,7 +38,7 @@ Servo myservo;
 //Define PID variables
 double tTheta, motorOutput;
 
-PID turnPID((double*)&marker.theta, &motorOutput, &tTheta, 15, 20, 0, DIRECT);
+PID turnPID((double*)&marker.theta, &motorOutput, &tTheta, 1, 20, 0, DIRECT);
 
 boolean isTopPath = false;
 boolean isFinished = false;
@@ -55,6 +58,14 @@ void setup() {
   pinMode(LEFT_MOTOR_B, OUTPUT);
   pinMode(LEFT_MOTOR_PWM, OUTPUT);
 
+  pinMode(PUMP_NEUT_HIGH, OUTPUT);
+  pinMode(PUMP_COLL_HIGH, OUTPUT);
+  pinMode(PUMP_SHARED_LOW, OUTPUT);
+
+  digitalWrite(PUMP_SHARED_LOW, LOW);
+  digitalWrite(PUMP_NEUT_HIGH, LOW);
+  digitalWrite(PUMP_COLL_HIGH, LOW);
+
   pinMode(SERVO_PIN, OUTPUT);
   myservo.attach(SERVO_PIN);
   
@@ -73,7 +84,7 @@ void loop() {
   if(!isFinished){
     rf.updateLocation();
 
-    myservo.write(60);
+    //myservo.write(60);
     
     rf.println(marker.x);
     rf.println(marker.y);
@@ -124,7 +135,7 @@ void loop() {
       rf.println(atan2(1.5 - marker.y, 2.0 - marker.x));
       turnToAngle(atan2(1.5 - marker.y, 2.0 - marker.x));
       rf.print("Move marker to position 2.0, 1.5");
-      driveToPositionX(2.0, 1.5);
+      //driveToWithin(2.0, 1.5, .32);
     } else {
       rf.print("Turn to angle: ");
       rf.println(isTopPath ? PI/2 : -PI/2);
@@ -140,17 +151,20 @@ void loop() {
       rf.print("Turn to angle: ");
       rf.println(atan2(1.5 - marker.y, 2.0 - marker.x));
       turnToAngle(atan2(1.5 - marker.y, 2.0 - marker.x));
-      rf.println("Move to location 2, 1.5");
-      driveToPositionY(2, 1.5);
+      //rf.println("Move to location 2, 1.5");
+      //driveToWithin(2, 1.5, .32);
     }
     
     drive(0,0);
-
+    
     myservo.write(150);
     delay(1000);
     myservo.write(90);
+    delay(1000);
 
     rf.transmitData(BASE, getPH());
+
+    isFinished = true;
   }
 }
 
@@ -158,7 +172,7 @@ void turnToAngle(float theta){
   tTheta = theta;
   rf.updateLocation();
   
-  while(angleDiff(marker.theta, theta) > 0.08){
+  while(angleDiff(marker.theta, theta) > 0.04){
     turnPID.Compute();
     drive(-motorOutput, motorOutput);
     rf.updateLocation();
@@ -302,5 +316,16 @@ float getPH(){
   phValue=(3.68)*phValue;                      //convert the millivolt into pH value
 
   return phValue;
+}
+
+void driveToWithin(float x, float y, float tolerance){
+    while(sqrt(pow(2 - marker.x, 2) + pow(1.5 - marker.y, 2)) > tolerance){
+      if(angleDiff(marker.theta, atan2(y - marker.y, x - marker.x)) < 0.6){
+        drive(.3,.3);
+      } else {
+        turnToAngle(atan2(y - marker.y, x - marker.x));
+      }
+      rf.updateLocation();
+    }
 }
 
