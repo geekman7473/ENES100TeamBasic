@@ -30,7 +30,7 @@ unsigned long t1;
   float inches;
 
 SoftwareSerial mySerial(8,9); 
-Marker marker(6); // Will have to replace # with our team's marker #
+Marker marker(106); // Will have to replace # with our team's marker #
 RF_Comm rf(&mySerial, &marker);
 
 Servo myservo;
@@ -38,7 +38,7 @@ Servo myservo;
 //Define PID variables
 double tTheta, motorOutput;
 
-PID turnPID((double*)&marker.theta, &motorOutput, &tTheta, 1, 20, 0, DIRECT);
+PID turnPID((double*)&marker.theta, &motorOutput, &tTheta, .5, 10, 0, DIRECT);
 
 boolean isTopPath = false;
 boolean isFinished = false;
@@ -81,10 +81,11 @@ void setup() {
 
 void loop() {
   rf.println("LOOP");
+  
   if(!isFinished){
     rf.updateLocation();
 
-    //myservo.write(60);
+    myservo.write(90);
     
     rf.println(marker.x);
     rf.println(marker.y);
@@ -135,7 +136,7 @@ void loop() {
       rf.println(atan2(1.5 - marker.y, 2.0 - marker.x));
       turnToAngle(atan2(1.5 - marker.y, 2.0 - marker.x));
       rf.print("Move marker to position 2.0, 1.5");
-      //driveToWithin(2.0, 1.5, .32);
+      driveToWithin(2.0, 1.5, .32);
     } else {
       rf.print("Turn to angle: ");
       rf.println(isTopPath ? PI/2 : -PI/2);
@@ -151,10 +152,13 @@ void loop() {
       rf.print("Turn to angle: ");
       rf.println(atan2(1.5 - marker.y, 2.0 - marker.x));
       turnToAngle(atan2(1.5 - marker.y, 2.0 - marker.x));
-      //rf.println("Move to location 2, 1.5");
-      //driveToWithin(2, 1.5, .32);
+      rf.println("Move to location 2, 1.5");
+      driveToWithin(2, 1.5, .32);
     }
-    
+
+    turnToAngle(atan2(1.5 - marker.y, 2.0 - marker.x));
+
+    rf.println("AT CHEM SIGHT");
     drive(0,0);
     
     myservo.write(150);
@@ -246,7 +250,7 @@ float angleDiff(float theta, float phi){
 }
 
 float getUltrasonic(){
-  unsigned long timer1 = millis();
+  /*unsigned long timer1 = millis();
   float sum = 0;
   int count = 0;
 
@@ -284,7 +288,8 @@ float getUltrasonic(){
     sum += cm;
     count++;
   }
-  return sum / count;
+  return sum / count;*/
+  return 100000;
 }
 
 float getPH(){
@@ -321,7 +326,7 @@ float getPH(){
 void driveToWithin(float x, float y, float tolerance){
     while(sqrt(pow(2 - marker.x, 2) + pow(1.5 - marker.y, 2)) > tolerance){
       if(angleDiff(marker.theta, atan2(y - marker.y, x - marker.x)) < 0.6){
-        drive(.3,.3);
+        drive(.6,.6);
       } else {
         turnToAngle(atan2(y - marker.y, x - marker.x));
       }
