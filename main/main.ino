@@ -1,4 +1,3 @@
-#include "enes100.h"
 #include "math.h"
 #include <PID_v1.h>
 #include <Servo.h>
@@ -156,30 +155,44 @@ void loop() {
     }
 
     turnToAngle(atan2(1.5 - marker.y, 2.0 - marker.x));
-
-    rf.println("AT CHEM SIGHT");
-    drive(0,0);
     
-    myservo.write(150);
-    delay(4000);
+    rf.println("AT CHEM SITE");
+    drive(0,0);
+
+    myservo.write(60);
+    delay(2000);
     myservo.write(90);
+
+    rf.println("SUBMERGED");
+    
     delay(15000);
     
     rf.transmitData(BASE, getPH());
 
+    rf.print("PH BEFORE: ");
+    rf.println(getPH());
+
     digitalWrite(PUMP_COLL_HIGH, HIGH);
-    delay(8000);
+    delay(12000);
     digitalWrite(PUMP_COLL_HIGH, LOW);
 
-    while(getPH() < 6.0){
+    rf.println("DONE COLLECTING");
+
+    while(getPH() < 6.2){
+      rf.print("NEUT PH: ");
+      rf.println(getPH());
       digitalWrite(PUMP_NEUT_HIGH, HIGH);
       delay(2000);
     }
 
     digitalWrite(PUMP_NEUT_HIGH, LOW);
 
+    Serial.println("DONE NEUTRALIZING");
+
+    delay(10000);
+
     rf.transmitData(BONUS, getPH());
-    
+
     isFinished = true;
   }
 }
@@ -329,7 +342,7 @@ float getPH(){
   for(int i=2;i<8;i++)                      //take the average value of 6 center sample
     avgValue+=buf[i];
   float phValue=(float)avgValue*5.0/1024/6; //convert the analog into millivolt
-  phValue=(4.45)*phValue;                      //convert the millivolt into pH value
+  phValue=(2.93)*phValue;                      //convert the millivolt into pH value
 
   return phValue;
 }
