@@ -77,14 +77,19 @@ void setup() {
   turnPID.SetMode(AUTOMATIC);
   turnPID.SetSampleTime(10);
   turnPID.SetOutputLimits(-1,1);
+
+  Serial.begin(9600);
 }
 
 void loop() {
   rf.println("LOOP");
-  if(!isFinished){
+  Serial.println("running");
+  Serial.println(getUltrasonic());
+  if(false){
+  //if(!isFinished){
     rf.updateLocation();
 
-    //myservo.write(60);
+    myservo.write(90);
     
     rf.println(marker.x);
     rf.println(marker.y);
@@ -135,7 +140,7 @@ void loop() {
       rf.println(atan2(1.5 - marker.y, 2.0 - marker.x));
       turnToAngle(atan2(1.5 - marker.y, 2.0 - marker.x));
       rf.print("Move marker to position 2.0, 1.5");
-      //driveToWithin(2.0, 1.5, .32);
+      driveToWithin(2.0, 1.5, .32);
     } else {
       rf.print("Turn to angle: ");
       rf.println(isTopPath ? PI/2 : -PI/2);
@@ -151,19 +156,32 @@ void loop() {
       rf.print("Turn to angle: ");
       rf.println(atan2(1.5 - marker.y, 2.0 - marker.x));
       turnToAngle(atan2(1.5 - marker.y, 2.0 - marker.x));
-      //rf.println("Move to location 2, 1.5");
-      //driveToWithin(2, 1.5, .32);
+      rf.println("Move to location 2, 1.5");
+      driveToWithin(2, 1.5, .32);
     }
     
     drive(0,0);
     
     myservo.write(150);
-    delay(1000);
+    delay(4000);
     myservo.write(90);
-    delay(1000);
-
+    delay(15000);
+    
     rf.transmitData(BASE, getPH());
 
+    digitalWrite(PUMP_COLL_HIGH, HIGH);
+    delay(8000);
+    digitalWrite(PUMP_COLL_HIGH, LOW);
+
+    while(getPH() < 6.0){
+      digitalWrite(PUMP_NEUT_HIGH, HIGH);
+      delay(2000);
+    }
+
+    digitalWrite(PUMP_NEUT_HIGH, LOW);
+
+    rf.transmitData(BONUS, getPH());
+    
     isFinished = true;
   }
 }
@@ -313,7 +331,7 @@ float getPH(){
   for(int i=2;i<8;i++)                      //take the average value of 6 center sample
     avgValue+=buf[i];
   float phValue=(float)avgValue*5.0/1024/6; //convert the analog into millivolt
-  phValue=(3.68)*phValue;                      //convert the millivolt into pH value
+  phValue=(4.45)*phValue;                      //convert the millivolt into pH value
 
   return phValue;
 }

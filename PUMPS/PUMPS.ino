@@ -1,8 +1,8 @@
 #include "enes100.h"
 
 const int PH_PIN = 0; //A0
-const int PUMP_NEUT_HIGH = 8;
-const int PUMP_COLL_HIGH = 9;
+const int PUMP_NEUT_HIGH = 0;
+const int PUMP_COLL_HIGH = 1;
 const int PUMP_SHARED_LOW = 11;
 
 //SoftwareSerial mySerial(8,9);
@@ -13,7 +13,7 @@ const int PUMP_SHARED_LOW = 11;
 boolean isFinished = false;
 
 void setup() {
-  Serial.begin(9600);
+  //Serial.begin(9600);
   
   pinMode(PUMP_NEUT_HIGH, OUTPUT);
   pinMode(PUMP_COLL_HIGH, OUTPUT);
@@ -27,7 +27,13 @@ void setup() {
 }
 
 void loop() {
-  if(!isFinished){
+  //Serial.println(getPH());
+  delay(2000);
+  digitalWrite(PUMP_NEUT_HIGH, HIGH);
+  delay(300000);
+  digitalWrite(PUMP_NEUT_HIGH, LOW);
+  if(false){
+  //if(!isFinished){
     //rf.transmitData(BASE, getPH());
     Serial.print("BEFORE ");
     Serial.println(getPH());
