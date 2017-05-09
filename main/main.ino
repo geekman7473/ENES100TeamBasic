@@ -1,3 +1,4 @@
+#include <enes100.h>
 #include "math.h"
 #include <PID_v1.h>
 #include <Servo.h>
@@ -29,7 +30,7 @@ unsigned long t1;
   float inches;
 
 SoftwareSerial mySerial(8,9); 
-Marker marker(106); // Will have to replace # with our team's marker #
+Marker marker(110); // Will have to replace # with our team's marker #
 RF_Comm rf(&mySerial, &marker);
 
 Servo myservo;
@@ -67,8 +68,9 @@ void setup() {
 
   pinMode(SERVO_PIN, OUTPUT);
   myservo.attach(SERVO_PIN);
+  pinMode(SERVO_PIN, INPUT);
   
-  //rf.transmitData(START_MISSION, NO_DATA); // Lets the Vision System (which is timing you) know that you are starting your mission
+  rf.transmitData(START_MISSION, NO_DATA); // Lets the Vision System (which is timing you) know that you are starting your mission
   rf.println("BASIC TEST");
   rf.println("START");
   rf.transmitData(NAV, CHEMICAL);
@@ -80,10 +82,10 @@ void setup() {
 }
 
 void loop() {
-  if(!isFinished){
+  rf.println(getPH());
+   if(false){
+   //if(!isFinished){
     rf.updateLocation();
-
-    myservo.write(90);
     
     rf.println(marker.x);
     rf.println(marker.y);
@@ -159,9 +161,12 @@ void loop() {
     rf.println("AT CHEM SITE");
     drive(0,0);
 
+    pinMode(SERVO_PIN, OUTPUT);
     myservo.write(60);
     delay(2000);
     myservo.write(90);
+    pinMode(SERVO_PIN, INPUT);
+
 
     rf.println("SUBMERGED");
     
@@ -187,7 +192,7 @@ void loop() {
 
     digitalWrite(PUMP_NEUT_HIGH, LOW);
 
-    Serial.println("DONE NEUTRALIZING");
+    rf.println("DONE NEUTRALIZING");
 
     delay(10000);
 
@@ -342,7 +347,7 @@ float getPH(){
   for(int i=2;i<8;i++)                      //take the average value of 6 center sample
     avgValue+=buf[i];
   float phValue=(float)avgValue*5.0/1024/6; //convert the analog into millivolt
-  phValue=(2.93)*phValue;                      //convert the millivolt into pH value
+  phValue=(2.8)*phValue;                      //convert the millivolt into pH value
 
   return phValue;
 }
