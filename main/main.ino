@@ -30,7 +30,7 @@ unsigned long t1;
   float inches;
 
 SoftwareSerial mySerial(8,9); 
-Marker marker(110); // Will have to replace # with our team's marker #
+Marker marker(10); // Will have to replace # with our team's marker #
 RF_Comm rf(&mySerial, &marker);
 
 Servo myservo;
@@ -38,7 +38,7 @@ Servo myservo;
 //Define PID variables
 double tTheta, motorOutput;
 
-PID turnPID((double*)&marker.theta, &motorOutput, &tTheta, .5, 10, 0, DIRECT);
+PID turnPID((double*)&marker.theta, &motorOutput, &tTheta, .5, 8, 0, DIRECT);
 
 boolean isTopPath = false;
 boolean isFinished = false;
@@ -71,9 +71,6 @@ void setup() {
   pinMode(SERVO_PIN, INPUT);
   
   rf.transmitData(START_MISSION, NO_DATA); // Lets the Vision System (which is timing you) know that you are starting your mission
-  rf.println("BASIC TEST");
-  rf.println("START");
-  rf.transmitData(NAV, CHEMICAL);
   
   turnPID.SetMode(AUTOMATIC);
   turnPID.SetSampleTime(10);
@@ -82,9 +79,7 @@ void setup() {
 }
 
 void loop() {
-  rf.println(getPH());
-   if(false){
-   //if(!isFinished){
+   if(!isFinished){
     rf.updateLocation();
     
     rf.println(marker.x);
@@ -136,7 +131,7 @@ void loop() {
       rf.println(atan2(1.5 - marker.y, 2.0 - marker.x));
       turnToAngle(atan2(1.5 - marker.y, 2.0 - marker.x));
       rf.print("Move marker to position 2.0, 1.5");
-      driveToWithin(2.0, 1.5, .32);
+      driveToWithin(2.0, 1.5, .35);
     } else {
       rf.print("Turn to angle: ");
       rf.println(isTopPath ? PI/2 : -PI/2);
@@ -153,13 +148,14 @@ void loop() {
       rf.println(atan2(1.5 - marker.y, 2.0 - marker.x));
       turnToAngle(atan2(1.5 - marker.y, 2.0 - marker.x));
       rf.println("Move to location 2, 1.5");
-      driveToWithin(2, 1.5, .32);
+      driveToWithin(2, 1.5, .35);
     }
 
     turnToAngle(atan2(1.5 - marker.y, 2.0 - marker.x));
     
     rf.println("AT CHEM SITE");
     drive(0,0);
+    rf.transmitData(NAV, CHEMICAL);
 
     pinMode(SERVO_PIN, OUTPUT);
     myservo.write(60);
@@ -178,12 +174,15 @@ void loop() {
     rf.println(getPH());
 
     digitalWrite(PUMP_COLL_HIGH, HIGH);
-    delay(12000);
+    delay(18000);
     digitalWrite(PUMP_COLL_HIGH, LOW);
 
     rf.println("DONE COLLECTING");
 
-    while(getPH() < 6.2){
+    unsigned long int phTimer = millis();
+    delay(10);
+
+    while(getPH() < 6.2 && millis() - phTimer < 240000){
       rf.print("NEUT PH: ");
       rf.println(getPH());
       digitalWrite(PUMP_NEUT_HIGH, HIGH);
@@ -199,6 +198,8 @@ void loop() {
     rf.transmitData(BONUS, getPH());
 
     isFinished = true;
+
+    rf.transmitData(END_MISSION, NO_DATA);
   }
 }
 
@@ -347,7 +348,7 @@ float getPH(){
   for(int i=2;i<8;i++)                      //take the average value of 6 center sample
     avgValue+=buf[i];
   float phValue=(float)avgValue*5.0/1024/6; //convert the analog into millivolt
-  phValue=(2.8)*phValue;                      //convert the millivolt into pH value
+  phValue=(3.25)*phValue;                      //convert the millivolt into pH value
 
   return phValue;
 }
