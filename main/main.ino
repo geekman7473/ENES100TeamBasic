@@ -38,7 +38,7 @@ Servo myservo;
 //Define PID variables
 double tTheta, motorOutput;
 
-PID turnPID((double*)&marker.theta, &motorOutput, &tTheta, .5, 8, 0, DIRECT);
+PID turnPID((double*)&marker.theta, &motorOutput, &tTheta, .3, 10, 0, DIRECT);
 
 boolean isTopPath = false;
 boolean isFinished = false;
@@ -79,7 +79,7 @@ void setup() {
 }
 
 void loop() {
-   if(!isFinished){
+  if(!isFinished){
     rf.updateLocation();
     
     rf.println(marker.x);
@@ -120,7 +120,10 @@ void loop() {
     //Pool is located at (2.0, 1.5)
     rf.print("Distance to wall: ");
 
+    myservo.detach();
+    drive(0,0);
     float ultra = getUltrasonic();
+    myservo.attach(SERVO_PIN);
     
     rf.println(ultra);
     if(ultra > 30.0){
@@ -131,7 +134,7 @@ void loop() {
       rf.println(atan2(1.5 - marker.y, 2.0 - marker.x));
       turnToAngle(atan2(1.5 - marker.y, 2.0 - marker.x));
       rf.print("Move marker to position 2.0, 1.5");
-      driveToWithin(2.0, 1.5, .35);
+      driveToWithin(2.0, 1.5, .36);
     } else {
       rf.print("Turn to angle: ");
       rf.println(isTopPath ? PI/2 : -PI/2);
@@ -148,7 +151,7 @@ void loop() {
       rf.println(atan2(1.5 - marker.y, 2.0 - marker.x));
       turnToAngle(atan2(1.5 - marker.y, 2.0 - marker.x));
       rf.println("Move to location 2, 1.5");
-      driveToWithin(2, 1.5, .35);
+      driveToWithin(2, 1.5, .36);
     }
 
     turnToAngle(atan2(1.5 - marker.y, 2.0 - marker.x));
