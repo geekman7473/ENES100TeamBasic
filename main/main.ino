@@ -22,13 +22,6 @@ const int PUMP_SHARED_LOW = 11;
 // Anything over 400 cm (23200 us pulse) is "out of range"
 const unsigned int MAX_DIST = 23200;
 
-// Variables for ultrasonic sensor
-unsigned long t1;
-  unsigned long t2;
-  unsigned long pulse_width;
-  float cm;
-  float inches;
-
 SoftwareSerial mySerial(8,9); 
 Marker marker(10); // Will have to replace # with our team's marker #
 RF_Comm rf(&mySerial, &marker);
@@ -38,7 +31,7 @@ Servo myservo;
 //Define PID variables
 double tTheta, motorOutput;
 
-PID turnPID((double*)&marker.theta, &motorOutput, &tTheta, .3, 10, 0, DIRECT);
+PID turnPID((double*)&marker.theta, &motorOutput, &tTheta, .6, 7, 0, DIRECT);
 
 boolean isTopPath = false;
 boolean isFinished = false;
@@ -185,10 +178,12 @@ void loop() {
     unsigned long int phTimer = millis();
     delay(10);
 
-    while(getPH() < 6.2 && millis() - phTimer < 240000){
+    while(getPH() < 6.3 && millis() - phTimer < 240000){
       rf.print("NEUT PH: ");
       rf.println(getPH());
       digitalWrite(PUMP_NEUT_HIGH, HIGH);
+      delay(2000);
+      digitalWrite(PUMP_NEUT_HIGH, LOW);
       delay(2000);
     }
 
@@ -299,10 +294,13 @@ float getUltrasonic(){
     digitalWrite(TRIG_PIN, HIGH);
     delayMicroseconds(10);
     digitalWrite(TRIG_PIN, LOW);
-  
+
+    unsigned long int timeout = micros();
     // Wait for pulse on echo pin
-    while ( digitalRead(ECHO_PIN) == 0 );
-  
+    while ( digitalRead(ECHO_PIN) == 0 && micros() - timeout < MAX_DIST);
+
+    boolean TIMED_OUT = micros() - timeout >= MAX_DIST;
+    
     // Measure how long the echo pin was held high (pulse width)
     // Note: the micros() counter will overflow after ~70 min
     t1 = micros();
@@ -318,6 +316,10 @@ float getUltrasonic(){
   
     // Wait at least 60ms before next measurement
     delay(60);
+
+    if(TIMED_OUT){
+      cm = 1000;
+    }
   
     sum += cm;
     count++;
