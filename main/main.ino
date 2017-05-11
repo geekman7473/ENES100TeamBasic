@@ -31,7 +31,7 @@ Servo myservo;
 //Define PID variables
 double tTheta, motorOutput;
 
-PID turnPID((double*)&marker.theta, &motorOutput, &tTheta, .6, 7, 0, DIRECT);
+PID turnPID((double*)&marker.theta, &motorOutput, &tTheta, .5, 7, 0, DIRECT);
 
 boolean isTopPath = false;
 boolean isFinished = false;
@@ -127,7 +127,7 @@ void loop() {
       rf.println(atan2(1.5 - marker.y, 2.0 - marker.x));
       turnToAngle(atan2(1.5 - marker.y, 2.0 - marker.x));
       rf.print("Move marker to position 2.0, 1.5");
-      driveToWithin(2.0, 1.5, .36);
+      driveToWithin(2.0, 1.5, .37);
     } else {
       rf.print("Turn to angle: ");
       rf.println(isTopPath ? PI/2 : -PI/2);
@@ -144,7 +144,7 @@ void loop() {
       rf.println(atan2(1.5 - marker.y, 2.0 - marker.x));
       turnToAngle(atan2(1.5 - marker.y, 2.0 - marker.x));
       rf.println("Move to location 2, 1.5");
-      driveToWithin(2, 1.5, .36);
+      driveToWithin(2, 1.5, .37);
     }
 
     turnToAngle(atan2(1.5 - marker.y, 2.0 - marker.x));
@@ -178,7 +178,7 @@ void loop() {
     unsigned long int phTimer = millis();
     delay(10);
 
-    while(getPH() < 6.3 && millis() - phTimer < 240000){
+    while(getPH() < 6 && millis() - phTimer < 240000){
       rf.print("NEUT PH: ");
       rf.println(getPH());
       digitalWrite(PUMP_NEUT_HIGH, HIGH);
@@ -294,19 +294,12 @@ float getUltrasonic(){
     digitalWrite(TRIG_PIN, HIGH);
     delayMicroseconds(10);
     digitalWrite(TRIG_PIN, LOW);
-
-    unsigned long int timeout = micros();
-    // Wait for pulse on echo pin
-    while ( digitalRead(ECHO_PIN) == 0 && micros() - timeout < MAX_DIST);
-
-    boolean TIMED_OUT = micros() - timeout >= MAX_DIST;
     
-    // Measure how long the echo pin was held high (pulse width)
-    // Note: the micros() counter will overflow after ~70 min
-    t1 = micros();
-    while ( digitalRead(ECHO_PIN) == 1);
-    t2 = micros();
-    pulse_width = t2 - t1;
+    pulse_width = pulseIn(ECHO_PIN, HIGH, MAX_DIST);
+    
+    if(pulse_width == 0){
+      pulse_width = MAX_DIST;
+    }
   
     // Calculate distance in centimeters and inches. The constants
     // are found in the datasheet, and calculated from the assumed speed 
@@ -316,10 +309,6 @@ float getUltrasonic(){
   
     // Wait at least 60ms before next measurement
     delay(60);
-
-    if(TIMED_OUT){
-      cm = 1000;
-    }
   
     sum += cm;
     count++;
